@@ -24,6 +24,7 @@ def clean_email(text):
         r"Mobile: \+\d{2,3} \d{6,10}",  # Phone numbers, adjust regex according to actual phone number formats
         r"LinkedIn:\s+",  # LinkedIn followed by potential URL or just space
         r"Email:\s+"  # Email keyword followed by space
+        # Jack Rich  Senior Product Manager Barcelona  Mobile: +34 623101789 LinkedIn: https://uk.linkedin.com/in/jackrich7 Email: Jackrich78@gmail.com
     ]
     
     # Combine all patterns into a single regex to run once
@@ -35,7 +36,7 @@ def clean_email(text):
     # Remove email addresses
     text = re.sub(r'\b[\w.-]+@[\w.-]+\.\w+\b', '', text)
     # Optionally, truncate long emails
-    text = text[:1500] if len(text) > 1500 else text
+    text = text[:2000] if len(text) > 2000 else text
     return text
 
 def preprocess_emails(input_csv_path, output_csv_path):
@@ -52,6 +53,6 @@ def preprocess_emails(input_csv_path, output_csv_path):
             writer.writerow(row)
 
 if __name__ == "__main__":
-    input_csv_path = 'data/past_email_cleaned_no_es.csv'  # Path to the input CSV file
-    output_csv_path = 'data/past_email_preprocessed.csv'  # Path to save the cleaned CSV file
+    input_csv_path = 'data/past_email_filtered.csv'  # Path to the input CSV file
+    output_csv_path = 'data/past_email_preprocessed_raw.csv'  # Path to save the cleaned CSV file
     preprocess_emails(input_csv_path, output_csv_path)

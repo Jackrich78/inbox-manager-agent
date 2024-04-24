@@ -1,7 +1,12 @@
 import os
+import logging
 from dotenv import find_dotenv, load_dotenv
 from openai import OpenAI
 import json, csv
+
+# set up logging
+logging.basicConfig(filename='email_parsing_errors.log', level=logging.INFO,
+                    format='%(asctime)s:%(levelname)s:%(message)s')
 
 load_dotenv(find_dotenv())
 
@@ -11,7 +16,8 @@ def parse_email(email_thread):
 
     system_prompt = """
     You are an expert of convert raw email thread into original message / reply pairs. 
-    You are given a raw email thread that Jack reply to others, your goal is to convert it into original message / reply pairs. 
+    You are given a raw email thread between Jack and others, your goal is to convert it into original message / reply pairs. 
+    In some cases Jack may be the sender, if this is the case identify the entire message as 'jack_reply'.
     - orignal_message: the last message sent to Jack, if it is a long email thread, only take the last message
     - jack_reply: Jack's reply to the original message
 
@@ -42,17 +48,24 @@ def process_csv(input_csv_path, output_csv_path):
 
         for row in csv_reader:
             text = row['Body']  # Get the text from the 'body' column
-            json_string = parse_email(text)
-            print(json_string)
             try: # to review
+                json_string = parse_email(text)
+                print(json_string)
                 json_data = json.loads(json_string)  # Convert JSON string to dictionary
+                original_message = json_data.get('original_message', '')
+                jack_reply = json_data.get('jack_reply', '')
+                # Append original row data and new columns to processed_data
+                processed_data.append([original_message, jack_reply])
+                # logging successful categorisation
+                logging.info(f"Successfully parsed email: {text[:200]}")
             except json.JSONDecodeError:
-                print(f"Failed to parse JSON for the email: {text}")
-                continue #skip this email or log the error for later review
-            original_message = json_data.get('original_message', '')
-            jack_reply = json_data.get('jack_reply', '')
-            # Append original row data and new columns to processed_data
-            processed_data.append([original_message, jack_reply])
+                # log parse failure
+                logging.error(f"Failed to parse JSON for the email: {text[:200]}")
+                continue  # skip this email or log the error for later review
+            except Exception as e:
+                # log any unexpected errors
+                logging.error(f"Unexpected error {e} for email: {text[:200]}")
+                continue
 
     # Write processed data to a new CSV file
     with open(output_csv_path, mode='w', newline='', encoding='utf-8') as csvfile:
@@ -62,9 +75,10 @@ def process_csv(input_csv_path, output_csv_path):
         # Write data rows
         csv_writer.writerows(processed_data)
 
-# Paths to your input and output CSV files
-input_csv_path = 'data/past_email_cleaned_no_es.csv'
-output_csv_path = 'data/email_pairs.csv'
+if __name__ == "__main__":
+    # Paths to your input and output CSV files
+    input_csv_path = 'data/preprocess_clean_test.csv'
+    output_csv_path = 'data/email_pairs.csv'
 
-# Call the function to process the CSV file
-process_csv(input_csv_path, output_csv_path)
+    # Call the function to process the CSV file
+    process_csv(input_csv_path, output_csv_path)
