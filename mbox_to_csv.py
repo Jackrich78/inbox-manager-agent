@@ -38,6 +38,6 @@ def mbox_to_csv(mbox_file_path, csv_file_path):
             ])
 
 # Usage
-mbox_file_path = 'inbox-manager-agent/data/raw_emails.mbox'  # replace with the path to your MBOX file
-csv_file_path = 'inbox-manager-agent/data/past_email_mbox.csv'  # replace with the desired path for the output CSV file
+mbox_file_path = 'data/raw_emails.mbox'  # replace with the path to your MBOX file
+csv_file_path = 'data/past_email_mbox.csv'  # replace with the desired path for the output CSV file
 mbox_to_csv(mbox_file_path, csv_file_path)

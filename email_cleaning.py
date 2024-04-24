@@ -1,10 +1,11 @@
 import os
 from dotenv import find_dotenv, load_dotenv
-import openai
+from openai import OpenAI
 import json, csv
 
 load_dotenv(find_dotenv())
-openai.api_key = os.environ.get("OPENAI_API_KEY")
+
+client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 def parse_email(email_thread):
 
@@ -23,21 +24,20 @@ def parse_email(email_thread):
     }
     """
 
-    response = openai.ChatCompletion.create(
+    response = client.completions.create(  # updated to newer API version
         model="gpt-4",
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": email_thread}
-        ]
-    )
+        ])
 
-    return response["choices"][0]["message"]["content"]
+    return response.choices[0].message.content
 
 def process_csv(input_csv_path, output_csv_path):
     with open(input_csv_path, newline='', encoding='utf-8') as csvfile:
         csv_reader = csv.DictReader(csvfile)
         processed_data = []
-        
+
         for row in csv_reader:
             text = row['Body']  # Get the text from the 'body' column
             json_string = parse_email(text)
@@ -47,7 +47,7 @@ def process_csv(input_csv_path, output_csv_path):
             jason_reply = json_data.get('jason_reply', '')
             # Append original row data and new columns to processed_data
             processed_data.append([original_message, jason_reply])
-    
+
     # Write processed data to a new CSV file
     with open(output_csv_path, mode='w', newline='', encoding='utf-8') as csvfile:
         csv_writer = csv.writer(csvfile)
@@ -57,8 +57,8 @@ def process_csv(input_csv_path, output_csv_path):
         csv_writer.writerows(processed_data)
 
 # Paths to your input and output CSV files
-input_csv_path = 'past_email_final_mboxt.csv'
-output_csv_path = 'email_pairs.csv'
+input_csv_path = 'data/past_email_cleaned.csv'
+output_csv_path = 'data/email_pairs.csv'
 
 # Call the function to process the CSV file
 process_csv(input_csv_path, output_csv_path)

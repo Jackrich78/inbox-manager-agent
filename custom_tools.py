@@ -1,6 +1,8 @@
 import os
 from dotenv import load_dotenv, find_dotenv
-import openai
+from openai import OpenAI
+
+client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 from langchain import PromptTemplate
 from langchain.agents import initialize_agent, Tool
@@ -19,7 +21,6 @@ import json
 from langchain.schema import SystemMessage
 
 load_dotenv(find_dotenv())
-openai.api_key = os.environ.get("OPENAI_API_KEY")
 llm = ChatOpenAI(temperature=0, model="gpt-3.5-turbo-16k-0613")
 
 
@@ -38,14 +39,12 @@ def check_consulting_email(lates_reply: str):
     ANSWER: 
     """
 
-    all_needs_collected_result = openai.ChatCompletion.create(
-        model="gpt-4",
-        messages=[
-            {"role": "user", "content": prompt}
-        ]
-    )
+    all_needs_collected_result = client.chat.completions.create(model="gpt-4",
+    messages=[
+        {"role": "user", "content": prompt}
+    ])
 
-    all_needs_collected = all_needs_collected_result["choices"][0]["message"]["content"]
+    all_needs_collected = all_needs_collected_result.choices[0].message.content
 
     return all_needs_collected
 
@@ -70,14 +69,12 @@ def categorise_email(lates_reply: str):
     CATEGORY (Return ONLY the category name in capital):
     """
 
-    category_result = openai.ChatCompletion.create(
-        model="gpt-4",
-        messages=[
-            {"role": "user", "content": categorise_prompt}
-        ]
-    )
+    category_result = client.chat.completions.create(model="gpt-4",
+    messages=[
+        {"role": "user", "content": categorise_prompt}
+    ])
 
-    category = category_result["choices"][0]["message"]["content"]
+    category = category_result.choices[0].message.content
 
     if category == "JOB_OFFER/CONSULTING":
         all_needs_collected = check_consulting_email(lates_reply)
