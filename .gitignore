@@ -5,3 +5,6 @@ email_pairs.csv
 faq.csv
 past_email_mbox.csv
 Sent.mbox
+
+# ignore specifc directories
+data/
